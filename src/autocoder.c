@@ -6,7 +6,6 @@
 
 
 
-
 typedef struct _autocoder
 {
     t_object					ob;			// the object itself (must be first)
@@ -58,22 +57,29 @@ void ext_main(void *r){
 
 void load(t_autocoder *x, const char *filename_model, const char *filename_mm){
     FILE *fp;
-    char *line = NULL;
+    char line[1024];
     size_t len = 0;
+
+#ifdef WIN_VERSION
+    SSIZE_T read;
+#else
     ssize_t read;
+#endif
     int line_num = 0;
-    
+
     fp = fopen(filename_mm, "r");
-    if(fp!=NULL)
-        while((read = getline(&line, &len, fp)) != -1) {
-            char * token = strtok(line, " ");
+    if (fp != NULL) {
+        while (fgets(line, sizeof line, fp) != NULL) {
+            char* token = strtok(line, " ");
             int p = 0;
-            while( token != NULL ) {
-                if(line_num == 0){
+            while (token != NULL) {
+                if (line_num == 0) {
                     x->scale_mult[p] = atof(token);
-                } else if( line_num == 1) {
+                }
+                else if (line_num == 1) {
                     x->scale_subtract[p] = atof(token);
-                } else if( line_num == 2) {
+                }
+                else if (line_num == 2) {
                     x->other_values[p] = atof(token);
                 }
                 token = strtok(NULL, " ");
@@ -81,6 +87,7 @@ void load(t_autocoder *x, const char *filename_model, const char *filename_mm){
             }
             line_num++;
         }
+    }
     
     fclose(fp);
     if(line)
@@ -245,5 +252,3 @@ void autocoder_anything(t_autocoder *x, t_symbol *s, long argc, t_atom *argv){
         post("... setting output size to %ld\n", x->output_size);
     }
 }
-
-
